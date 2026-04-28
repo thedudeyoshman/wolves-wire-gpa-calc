@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wolves Wire GPA Calc</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b1628;
+    --surface: #112240;
+    --surface-hover: #162d54;
+    --border: #1e3a6a;
+    --text: #f0f4ff;
+    --text-muted: #8296b8;
+    --accent: #ffffff;
+    --accent-glow: rgba(255, 255, 255, 0.1);
+    --navy: #0d1f3c;
+    --navy-light: #1a3566;
+    --navy-bright: #2a4a82;
+    --white: #ffffff;
+    --white-muted: rgba(255, 255, 255, 0.85);
+    --green: #4ade80;
+    --green-muted: rgba(74, 222, 128, 0.12);
+    --yellow: #facc15;
+    --yellow-muted: rgba(250, 204, 21, 0.12);
+    --orange: #fb923c;
+    --orange-muted: rgba(251, 146, 60, 0.12);
+    --red: #f87171;
+    --red-muted: rgba(248, 113, 113, 0.12);
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .noise {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow-orb {
+    position: fixed;
+    width: 700px;
+    height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(26, 53, 102, 0.5) 0%, transparent 70%);
+    top: -300px;
+    right: -250px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow-orb-2 {
+    position: fixed;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(26, 53, 102, 0.3) 0%, transparent 70%);
+    bottom: -200px;
+    left: -200px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .logo-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .wolf-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  header .tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: var(--white);
+    margin-bottom: 16px;
+    display: inline-block;
+    background: var(--navy-light);
+    border: 1px solid var(--navy-bright);
+    padding: 6px 18px;
+    border-radius: 100px;
+  }
+
+  header h1 {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+    color: var(--white);
+  }
+
+  header h1 span {
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  header p {
+    color: var(--text-muted);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* GPA Display */
+  .gpa-display {
+    background: linear-gradient(135deg, var(--navy-light) 0%, var(--surface) 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 44px 40px;
+    text-align: center;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .gpa-display::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--white), transparent);
+    opacity: 0.6;
+  }
+
+  .gpa-display::after {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    right: -60px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .gpa-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 76px;
+    font-weight: 700;
+    letter-spacing: -3px;
+    line-height: 1;
+    margin-bottom: 8px;
+    transition: color 0.3s;
+  }
+
+  .gpa-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+  }
+
+  .gpa-letter {
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    margin-top: 14px;
+    display: inline-block;
+    padding: 4px 18px;
+    border-radius: 8px;
+  }
+
+  /* Paste area */
+  .paste-section {
+    margin-bottom: 32px;
+  }
+
+  .paste-section label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 10px;
+    color: var(--text-muted);
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 160px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    padding: 16px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  textarea:focus {
+    border-color: var(--white);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.08);
+  }
+
+  textarea::placeholder {
+    color: var(--text-muted);
+    opacity: 0.5;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  button {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    padding: 12px 24px;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--white);
+    color: var(--navy);
+    flex: 1;
+  }
+
+  .btn-primary:hover {
+    background: var(--white-muted);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 24px rgba(255,255,255,0.15);
+  }
+
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+
+  /* Exclude list */
+  .exclude-section {
+    margin-bottom: 24px;
+  }
+
+  .exclude-section summary {
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 8px 0;
+    list-style: none;
+  }
+
+  .exclude-section summary::before {
+    content: '▸ ';
+    font-family: 'Space Mono', monospace;
+  }
+
+  .exclude-section[open] summary::before {
+    content: '▾ ';
+  }
+
+  .exclude-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .chip {
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 100px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .chip.excluded {
+    background: var(--red-muted);
+    border-color: var(--red);
+    color: var(--red);
+    text-decoration: line-through;
+  }
+
+  .chip:hover {
+    border-color: var(--text-muted);
+  }
+
+  /* Course cards */
+  .courses {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+
+  .course-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    transition: all 0.3s;
+    animation: slideIn 0.3s ease-out;
+  }
+
+  .course-card:hover {
+    border-color: var(--navy-bright);
+    background: var(--surface-hover);
+  }
+
+  .course-card.excluded-card {
+    opacity: 0.3;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .course-info {
+    flex: 1;
+  }
+
+  .course-name {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .course-teacher {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .course-grade {
+    text-align: right;
+  }
+
+  .course-pct {
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .course-letter {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    display: inline-block;
+    margin-top: 2px;
+  }
+
+  .grade-a { color: var(--green); }
+  .grade-a-bg { background: var(--green-muted); color: var(--green); }
+  .grade-b { color: var(--yellow); }
+  .grade-b-bg { background: var(--yellow-muted); color: var(--yellow); }
+  .grade-c { color: var(--orange); }
+  .grade-c-bg { background: var(--orange-muted); color: var(--orange); }
+  .grade-d, .grade-f { color: var(--red); }
+  .grade-d-bg, .grade-f-bg { background: var(--red-muted); color: var(--red); }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-state .icon {
+    font-size: 52px;
+    margin-bottom: 16px;
+    opacity: 0.4;
+  }
+
+  .empty-state p {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .error-msg {
+    background: var(--red-muted);
+    color: var(--red);
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+  }
+
+  .share-hint {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 24px;
+    opacity: 0.5;
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .footer p {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    opacity: 0.4;
+    letter-spacing: 1px;
+  }
+
+  @media (max-width: 480px) {
+    .container { padding: 24px 16px 60px; }
+    header h1 { font-size: 28px; }
+    .gpa-number { font-size: 56px; }
+    textarea { min-height: 120px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="noise"></div>
+<div class="glow-orb"></div>
+<div class="glow-orb-2"></div>
+
+<div class="container">
+  <header>
+    <div class="logo-row">
+      <svg class="wolf-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 6L14 20L10 34L18 42H30L38 34L34 20L40 6L32 16L24 12L16 16L8 6Z" fill="white" fill-opacity="0.9"/>
+        <path d="M18 28L21 32H27L30 28L27 24H21L18 28Z" fill="#0b1628"/>
+        <circle cx="18" cy="22" r="2" fill="#0b1628"/>
+        <circle cx="30" cy="22" r="2" fill="#0b1628"/>
+      </svg>
+    </div>
+    <div class="tag">Wolves Wire</div>
+    <h1>GPA Calc</h1>
+    <p>Paste your RenWeb grade report. Get your GPA instantly.</p>
+  </header>
+
+  <div class="gpa-display" id="gpaDisplay" style="display: none;">
+    <div class="gpa-number" id="gpaNumber">—</div>
+    <div class="gpa-label">Semester GPA</div>
+    <div class="gpa-letter" id="gpaLetter"></div>
+  </div>
+
+  <div class="paste-section">
+    <label>Paste your RenWeb grade report text here</label>
+    <textarea id="inputArea" placeholder="Copy everything from your RenWeb grade email and paste it here..."></textarea>
+    <div class="error-msg" id="errorMsg"></div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="calculate()">Calculate GPA</button>
+      <button class="btn-secondary" onclick="clearAll()">Clear</button>
+    </div>
+  </div>
+
+  <details class="exclude-section" id="excludeSection" style="display: none;">
+    <summary>Exclude courses from GPA</summary>
+    <div class="exclude-chips" id="excludeChips"></div>
+  </details>
+
+  <div class="courses" id="courseList"></div>
+
+  <div class="empty-state" id="emptyState">
+    <div class="icon">🐺</div>
+    <p>Paste your RenWeb grade report above<br>and hit Calculate to see your GPA.</p>
+  </div>
+
+  <div class="share-hint" id="shareHint" style="display: none;">
+    Share this with the pack — anyone can paste their own grades.
+  </div>
+
+  <div class="footer">
+    <p>Wolves Wire &middot; GPA Calc</p>
+  </div>
+</div>
+
+<script>
+  const GRADE_SCALE = {
+    'A+': 4.0, 'A': 4.0, 'A-': 3.7,
+    'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+    'C+': 2.3, 'C': 2.0, 'C-': 1.7,
+    'D+': 1.3, 'D': 1.0, 'D-': 0.7,
+    'F': 0.0
+  };
+
+  const DEFAULT_EXCLUDES = ['citizenship'];
+
+  let courses = [];
+  let excludedCourses = new Set();
+
+  function percentToLetter(pct) {
+    if (pct >= 97) return 'A+';
+    if (pct >= 93) return 'A';
+    if (pct >= 90) return 'A-';
+    if (pct >= 87) return 'B+';
+    if (pct >= 83) return 'B';
+    if (pct >= 80) return 'B-';
+    if (pct >= 77) return 'C+';
+    if (pct >= 73) return 'C';
+    if (pct >= 70) return 'C-';
+    if (pct >= 67) return 'D+';
+    if (pct >= 63) return 'D';
+    if (pct >= 60) return 'D-';
+    return 'F';
+  }
+
+  function gradeColorClass(letter) {
+    if (letter.startsWith('A')) return 'grade-a';
+    if (letter.startsWith('B')) return 'grade-b';
+    if (letter.startsWith('C')) return 'grade-c';
+    if (letter.startsWith('D')) return 'grade-d';
+    return 'grade-f';
+  }
+
+  function gradeColorClassBg(letter) {
+    return gradeColorClass(letter) + '-bg';
+  }
+
+  function parseRenWebReport(text) {
+    const parsed = [];
+    const lines = text.split('\n');
+    let currentCourse = null;
+    let currentTeacher = null;
+    let currentSubject = null;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+
+      const headerMatch = line.match(/^[\w]+,\s*[\w]+\s+\d{4}-\d{4}\s+(.+)$/);
+      if (headerMatch) {
+        currentTeacher = headerMatch[1].trim();
+        if (i + 1 < lines.length) {
+          const nextLine = lines[i + 1].trim();
+          const courseMatch = nextLine.match(/^(.+?)\s+Sem\s+\d/);
+          if (courseMatch) {
+            currentCourse = courseMatch[1].trim();
+          }
+        }
+        for (let j = i + 2; j < Math.min(i + 6, lines.length); j++) {
+          const subLine = lines[j].trim();
+          if (subLine.match(/^(MIXED|Mixed)$/i)) {
+            for (let k = j + 1; k < Math.min(j + 3, lines.length); k++) {
+              const subjLine = lines[k].trim();
+              if (subjLine && subjLine.length > 1) {
+                currentSubject = subjLine;
+                break;
+              }
+            }
+            break;
+          }
+        }
+        continue;
+      }
+
+      const termMatch = line.match(/^Term Grade\s+([\d.]+)\s*([A-F][+-]?)?\s*$/);
+      if (termMatch && currentSubject) {
+        const pct = parseFloat(termMatch[1]);
+        let letter = termMatch[2] || '';
+        if (!letter) {
+          letter = percentToLetter(pct);
+        }
+
+        parsed.push({
+          name: currentSubject,
+          code: currentCourse || currentSubject,
+          teacher: currentTeacher || '',
+          percentage: pct,
+          letter: letter
+        });
+
+        currentCourse = null;
+        currentTeacher = null;
+        currentSubject = null;
+      }
+    }
+
+    return parsed;
+  }
+
+  function isDefaultExcluded(name) {
+    const lower = name.toLowerCase();
+    return DEFAULT_EXCLUDES.some(ex => lower.includes(ex));
+  }
+
+  function calculate() {
+    const text = document.getElementById('inputArea').value.trim();
+    const errorEl = document.getElementById('errorMsg');
+    errorEl.style.display = 'none';
+
+    if (!text) {
+      errorEl.textContent = 'Paste your RenWeb grade report first.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    courses = parseRenWebReport(text);
+
+    if (courses.length === 0) {
+      errorEl.textContent = 'Could not find any grades. Make sure you pasted the full RenWeb report text.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    excludedCourses = new Set();
+    courses.forEach(c => {
+      if (isDefaultExcluded(c.name)) {
+        excludedCourses.add(c.name);
+      }
+    });
+
+    renderExcludeChips();
+    renderCourses();
+    updateGPA();
+
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('shareHint').style.display = 'block';
+  }
+
+  function renderExcludeChips() {
+    const container = document.getElementById('excludeChips');
+    const section = document.getElementById('excludeSection');
+    section.style.display = 'block';
+
+    container.innerHTML = courses.map(c => {
+      const isExcluded = excludedCourses.has(c.name);
+      return `<div class="chip ${isExcluded ? 'excluded' : ''}" onclick="toggleExclude('${c.name.replace(/'/g, "\\'")}')">${c.name}</div>`;
+    }).join('');
+  }
+
+  function toggleExclude(name) {
+    if (excludedCourses.has(name)) {
+      excludedCourses.delete(name);
+    } else {
+      excludedCourses.add(name);
+    }
+    renderExcludeChips();
+    renderCourses();
+    updateGPA();
+  }
+
+  function renderCourses() {
+    const container = document.getElementById('courseList');
+    container.innerHTML = courses.map(c => {
+      const isExcluded = excludedCourses.has(c.name);
+      const colorClass = gradeColorClass(c.letter);
+      const bgClass = gradeColorClassBg(c.letter);
+      return `
+        <div class="course-card ${isExcluded ? 'excluded-card' : ''}" style="animation-delay: 0s">
+          <div class="course-info">
+            <div class="course-name">${c.name}</div>
+            <div class="course-teacher">${c.teacher}</div>
+          </div>
+          <div class="course-grade">
+            <div class="course-pct ${colorClass}">${c.percentage.toFixed(c.percentage % 1 === 0 ? 0 : 2)}%</div>
+            <div class="course-letter ${bgClass}">${c.letter}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function updateGPA() {
+    const included = courses.filter(c => !excludedCourses.has(c.name));
+    const display = document.getElementById('gpaDisplay');
+
+    if (included.length === 0) {
+      display.style.display = 'none';
+      return;
+    }
+
+    display.style.display = 'block';
+
+    const totalPoints = included.reduce((sum, c) => {
+      return sum + (GRADE_SCALE[c.letter] || 0);
+    }, 0);
+
+    const gpa = totalPoints / included.length;
+    const gpaRounded = Math.round(gpa * 100) / 100;
+
+    const gpaNum = document.getElementById('gpaNumber');
+    const gpaLetter = document.getElementById('gpaLetter');
+
+    gpaNum.textContent = gpaRounded.toFixed(2);
+
+    let gpaLetterStr = '';
+    if (gpa >= 3.85) gpaLetterStr = 'A';
+    else if (gpa >= 3.5) gpaLetterStr = 'A-';
+    else if (gpa >= 3.15) gpaLetterStr = 'B+';
+    else if (gpa >= 2.85) gpaLetterStr = 'B';
+    else if (gpa >= 2.5) gpaLetterStr = 'B-';
+    else if (gpa >= 2.15) gpaLetterStr = 'C+';
+    else if (gpa >= 1.85) gpaLetterStr = 'C';
+    else if (gpa >= 1.5) gpaLetterStr = 'C-';
+    else if (gpa >= 1.15) gpaLetterStr = 'D+';
+    else if (gpa >= 0.85) gpaLetterStr = 'D';
+    else if (gpa >= 0.5) gpaLetterStr = 'D-';
+    else gpaLetterStr = 'F';
+
+    const colorClass = gradeColorClass(gpaLetterStr);
+    const bgClass = gradeColorClassBg(gpaLetterStr);
+
+    gpaNum.className = 'gpa-number ' + colorClass;
+    gpaLetter.className = 'gpa-letter ' + bgClass;
+    gpaLetter.textContent = gpaLetterStr;
+  }
+
+  function clearAll() {
+    document.getElementById('inputArea').value = '';
+    document.getElementById('errorMsg').style.display = 'none';
+    document.getElementById('gpaDisplay').style.display = 'none';
+    document.getElementById('courseList').innerHTML = '';
+    document.getElementById('excludeSection').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'block';
+    document.getElementById('shareHint').style.display = 'none';
+    courses = [];
+    excludedCourses = new Set();
+  }
+</script>
+
+</body>
+</html>
