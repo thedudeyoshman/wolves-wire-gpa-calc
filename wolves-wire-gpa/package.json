@@ -1,19 +1,14 @@
 {
   "name": "wolves-wire-gpa",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "next": "^16.2.4",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "next": "15.3.2",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
   }
 }
